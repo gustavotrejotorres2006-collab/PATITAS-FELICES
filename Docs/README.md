@@ -144,6 +144,17 @@ El prototipo utiliza **Material Symbols Outlined** para acciones e indicadores, 
 - En móvil, prioriza acciones frecuentes y presentación apilada sin ocultar datos clínicos esenciales.
 - El material no especifica un tema oscuro ni reglas de movimiento reducido; no los des por definidos.
 
-## Aplicación al proyecto
+## Plantillas Blade del proyecto
 
-El sistema descrito es una referencia del prototipo Stitch. La hoja actual de la aplicación contiene la importación base de Tailwind CSS v4 y una declaración `--font-sans` de `Instrument Sans`; no contiene todavía la paleta ni las escalas de la referencia. Si se implementa el sistema en Laravel, traduce primero los tokens a `@theme` en CSS y aplica sus variantes de forma semántica en las vistas Blade. Evita copiar la configuración Tailwind CDN del prototipo como configuración de producción.
+El proyecto incluye dos layouts Blade basados en estos tokens:
+
+- [`resources/views/layouts/public.blade.php`](../resources/views/layouts/public.blade.php): encabezado y pie de página públicos, navegación adaptable, enlace para saltar al contenido y secciones de contenido.
+- [`resources/views/layouts/portal.blade.php`](../resources/views/layouts/portal.blade.php): portal privado con sidebar de escritorio, navegación móvil, encabezado de sección, contenido, y acciones de cuenta/cierre de sesión condicionales.
+- [`resources/views/public/home.blade.php`](../resources/views/public/home.blade.php): portada de ejemplo usada en `/`.
+- [`resources/views/portal/dashboard.blade.php`](../resources/views/portal/dashboard.blade.php): ejemplo de dashboard listo para extender desde una ruta protegida.
+
+La paleta principal, la tipografía Plus Jakarta Sans y las escalas semánticas de espaciado están configuradas con `@theme` en [`resources/css/app.css`](../resources/css/app.css). Los radios se declaran con tokens explícitos para evitar asumir equivalencias entre las distintas escalas de radio descritas en los archivos de referencia. Plus Jakarta Sans se sirve desde los recursos optimizados por Vite; Material Symbols Outlined se carga desde Google Fonts. La familia de sistema queda como alternativa para el texto.
+
+Para crear una página pública, usa `@extends('layouts.public')` y define `title`, `public-navigation`, `mobile-navigation`, `header-actions` y `content`. Para una página del portal, usa `@extends('layouts.portal')` y define `title`, `portal-section`, `page-heading`, `portal-navigation`, `portal-mobile-navigation` y `content`. Ambas plantillas aceptan `meta-description` y `@stack('head')`; el portal también proporciona las secciones `breadcrumbs` y `portal-header-actions`.
+
+El layout privado solo define la presentación: **no autentica ni autoriza solicitudes**. Registra sus rutas bajo el middleware de autenticación y las políticas/autorizaciones apropiadas antes de exponer datos privados. Las métricas y la agenda del dashboard son estados de ejemplo sin datos; pásalos desde el controlador al conectar el modelo real. Evita copiar la configuración Tailwind CDN del prototipo como configuración de producción.
