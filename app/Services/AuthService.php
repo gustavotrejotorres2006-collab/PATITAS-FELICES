@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -43,7 +44,7 @@ class AuthService
         return User::query()->create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => $data['password'],
+            'password' => Hash::make((string) $data['password']),
             'estado' => $data['estado'] ?? 'activo',
             'telefono' => $data['telefono'] ?? null,
         ]);

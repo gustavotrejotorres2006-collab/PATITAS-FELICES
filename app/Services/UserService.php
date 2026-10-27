@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
@@ -12,6 +13,10 @@ class UserService
      */
     public function create(array $data): User
     {
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make((string) $data['password']);
+        }
+
         return User::query()->create($data);
     }
 

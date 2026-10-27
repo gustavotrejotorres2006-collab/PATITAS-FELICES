@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Mascota;
 use App\Models\Propietario;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class MascotaService
 {
@@ -41,11 +42,23 @@ class MascotaService
 
     public function assignOwner(Mascota $mascota, Propietario $propietario, bool $principal = false): void
     {
-        $mascota->propietarios()->syncWithoutDetaching([
-            $propietario->id => [
-                'es_principal' => $principal,
-                'estado' => 'activo',
-            ],
-        ]);
+        DB::transaction(function () use ($mascota, $propietario, $principal): void {
+            if ($principal) {
+                $mascota->propietarios()
+                    ->newPivotQuery()
+                    ->where('mascota_id', $mascota->getKey())
+                    ->where('estado', 'activo')
+                    ->where('es_principal', true)
+                    ->where('propietario_id', '!=', $propietario->getKey())
+                    ->update(['es_principal' => false]);
+            }
+
+            $mascota->propietarios()->syncWithoutDetaching([
+                $propietario->getKey() => [
+                    'es_principal' => $principal,
+                    'estado' => 'activo',
+                ],
+            ]);
+        });
     }
 }

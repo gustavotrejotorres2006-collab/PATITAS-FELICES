@@ -28,7 +28,8 @@ class InventarioService
     public function lowStockProducts(): Collection
     {
         return Producto::query()
-            ->whereColumn('stock_minimo', '>', 'productos.stock_minimo')
+            ->withSum('lotes as stock_disponible', 'cantidad_disponible')
+            ->havingRaw('COALESCE(stock_disponible, 0) < stock_minimo')
             ->get();
     }
 
