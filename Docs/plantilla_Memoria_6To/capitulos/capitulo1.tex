@@ -1,3 +1,15 @@
+\chapter{Introducción}
+
+La organización de la atención y de las actividades administrativas es fundamental para ofrecer un servicio oportuno en una clínica veterinaria. Cuando la información de los propietarios, sus mascotas, las citas y las atenciones se registra en distintos medios, su consulta y actualización pueden volverse lentas y propiciar duplicidades o pérdida de datos. Estas dificultades afectan tanto la coordinación del personal como la continuidad de la atención.
+
+Como respuesta a esta necesidad, se propone desarrollar una plataforma web para apoyar la gestión de la clínica Patitas Felices. La solución se implementará con Laravel y PHP, y utilizará MariaDB para almacenar la información. Desde una interfaz centralizada, el personal podrá organizar los registros de propietarios y mascotas, administrar citas y consultar la información asociada con las atenciones. El sistema busca facilitar las tareas cotidianas, mejorar el acceso a la información y contribuir a una administración más ordenada.
+
+\section{Antecedentes}
+
+La digitalización de los procesos administrativos permite concentrar información que, de otro modo, puede permanecer dispersa entre documentos físicos, hojas de cálculo o distintos archivos. En una clínica veterinaria, mantener organizados los datos de las mascotas y sus propietarios, así como las citas y los registros de atención, favorece la consulta de antecedentes y la coordinación del equipo.
+
+Las aplicaciones web ofrecen acceso a la información desde los dispositivos autorizados que cuenten con conexión al sistema, sin requerir que cada usuario mantenga una copia independiente de los registros. En este proyecto, Laravel y PHP se emplearán para construir la aplicación, mientras que MariaDB se utilizará para la persistencia de los datos. La plataforma se plantea como una herramienta de apoyo para los procesos de la clínica y no como sustituto del criterio profesional veterinario.
+
 \section{Objetivo General}
 
 Desarrollar una plataforma web modernizando la atencion y administracion de una clinica y administrativos mediante laravel, php y mariadb mejorando la organizacion y el acceso a a informacion y la eficiencia de sus servicios
@@ -12,7 +24,38 @@ Desarrollar una plataforma web modernizando la atencion y administracion de una 
 
 \section{Alcance}
 
+El proyecto \textbf{PatitasFelices} contempla el desarrollo de una plataforma web para centralizar y optimizar los procesos clínicos y administrativos de una clínica veterinaria, mediante Laravel 13, PHP 8.4 y MariaDB.
+
+El sistema incluirá los siguientes módulos y funcionalidades:
+
+\begin{enumerate}
+    \item \textbf{Propietarios y mascotas:} Registro, consulta y administración de los datos de los propietarios y sus mascotas.
+    \item \textbf{Agenda y disponibilidad:} Gestión de citas, horarios, solicitudes, confirmaciones y cancelaciones, evitando conflictos de horario.
+    \item \textbf{Atenciones y expedientes clínicos:} Registro de consultas, antecedentes médicos, diagnósticos, tratamientos y observaciones veterinarias.
+    \item \textbf{Vacunación y seguimientos:} Control de vacunas, desparasitaciones, tratamientos y recordatorios relacionados con la salud de las mascotas.
+    \item \textbf{Insumos e inventario:} Administración de productos, proveedores, compras, existencias, lotes y fechas de caducidad.
+    \item \textbf{Ventas y control financiero:} Registro de ventas de productos y servicios, pagos, devoluciones y movimientos de caja.
+    \item \textbf{Usuarios y permisos:} Administración de los roles de administrador, recepción, veterinario y propietario, con acceso a las funciones correspondientes a cada perfil.
+    \item \textbf{Portal y reportes:} Interfaz para propietarios y personal de la clínica, consulta de información autorizada y generación de reportes sobre las operaciones registradas.
+    \item \textbf{Seguridad y pruebas:} Implementación de mecanismos de autenticación, validaciones, protección de información y pruebas funcionales para verificar el funcionamiento de los módulos.
+\end{enumerate}
+
+El alcance comprende el desarrollo de una plataforma web accesible desde dispositivos con navegador y conexión a internet. Su finalidad es mejorar la organización de la clínica, facilitar el seguimiento de los pacientes y centralizar la información clínica y administrativa, sin sustituir el criterio profesional del veterinario ni los sistemas contables especializados.
+
 \section{Limitaciones}
+
+\begin{enumerate}
+    \item \textbf{Dependencia de internet:} El acceso a la plataforma web dependerá de una conexión a internet y de la disponibilidad del servicio de alojamiento.
+    \item \textbf{Acceso por roles:} Cada usuario tendrá acceso únicamente a los módulos y funciones autorizados según su rol dentro de la clínica veterinaria.
+    \item \textbf{Gestión de citas:} El sistema permitirá registrar y administrar citas, pero no garantizará la asistencia de los propietarios ni la disponibilidad del personal fuera de los horarios configurados.
+    \item \textbf{Expedientes clínicos:} La información médica dependerá de los datos registrados por el personal autorizado; el sistema no realizará diagnósticos veterinarios automáticos.
+    \item \textbf{Inventario y productos:} El control de existencias dependerá del registro correcto de compras, ventas, entradas, salidas y ajustes de inventario.
+    \item \textbf{Notificaciones y seguimientos:} Los recordatorios dependerán de la configuración del sistema y de los mecanismos de envío disponibles; no se garantizará su recepción por parte de los usuarios.
+    \item \textbf{Gestión financiera:} El sistema permitirá registrar ventas, pagos y movimientos de caja, pero no sustituirá un sistema contable especializado ni garantizará la integración con bancos o plataformas de pago externas.
+    \item \textbf{Seguridad de la información:} Aunque se implementarán controles de acceso y validaciones, la protección de los datos también dependerá de la configuración del servidor, las políticas de contraseñas y el mantenimiento de la plataforma.
+    \item \textbf{Disponibilidad y mantenimiento:} Las actualizaciones, fallas técnicas o interrupciones del servidor podrían limitar temporalmente el acceso al sistema.
+    \item \textbf{Alcance funcional:} La plataforma se limitará a los módulos definidos para el proyecto, por lo que funciones adicionales, como una aplicación móvil independiente, telemedicina o integraciones con servicios externos, requerirán desarrollo adicional.
+\end{enumerate}
 
 \section{Problemática}
 
