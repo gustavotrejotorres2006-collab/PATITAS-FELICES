@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Portal\EspecialidadController;
 use App\Http\Controllers\Portal\MascotaController;
+use App\Http\Controllers\Portal\ProfesionalController;
 use App\Http\Controllers\Portal\PropietarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,7 +31,14 @@ Route::middleware(['auth', 'role:Administrador'])
         })->name('dashboard');
 
         Route::resource('propietarios', PropietarioController::class)->except(['destroy']);
-        Route::get('mascotas', [MascotaController::class, 'index'])->name('mascotas.index');
+        Route::resource('mascotas', MascotaController::class)
+            ->only(['index', 'show', 'edit', 'update']);
+        Route::resource('profesionales', ProfesionalController::class)
+            ->except(['destroy'])
+            ->parameters(['profesionales' => 'profesional']);
+        Route::resource('especialidades', EspecialidadController::class)
+            ->except(['show', 'destroy'])
+            ->parameters(['especialidades' => 'especialidad']);
 
         Route::get('propietarios/{propietario}/mascotas/create', [MascotaController::class, 'create'])
             ->name('propietarios.mascotas.create');

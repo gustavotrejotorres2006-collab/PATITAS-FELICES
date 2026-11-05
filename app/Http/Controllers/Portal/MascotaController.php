@@ -53,6 +53,29 @@ class MascotaController extends Controller
         return view('portal.mascotas.index', compact('mascotas', 'search'));
     }
 
+    public function show(Mascota $mascota): View
+    {
+        $mascota->load([
+            'propietarios' => fn (BelongsToMany $query) => $query->wherePivot('estado', 'activo'),
+        ]);
+
+        return view('portal.mascotas.show', compact('mascota'));
+    }
+
+    public function edit(Mascota $mascota): View
+    {
+        return view('portal.mascotas.edit', compact('mascota'));
+    }
+
+    public function update(Request $request, Mascota $mascota): RedirectResponse
+    {
+        $this->mascotaService->update($mascota, $this->validatedPetData($request, $mascota));
+
+        return redirect()
+            ->route('portal.mascotas.show', $mascota)
+            ->with('success', 'Los datos de la mascota se actualizaron correctamente.');
+    }
+
     public function create(Propietario $propietario): View
     {
         abort_if($propietario->estado !== 'activo', 404);
@@ -64,6 +87,24 @@ class MascotaController extends Controller
     {
         abort_if($propietario->estado !== 'activo', 404);
 
+        $data = $this->validatedPetData($request);
+        $data['esterilizado'] = $request->boolean('esterilizado');
+
+        DB::transaction(function () use ($data, $propietario): void {
+            $mascota = $this->mascotaService->create($data);
+            $this->mascotaService->assignOwner($mascota, $propietario, true);
+        });
+
+        return redirect()
+            ->route('portal.propietarios.show', $propietario)
+            ->with('success', 'La mascota se registró y quedó asociada al propietario.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedPetData(Request $request, ?Mascota $mascota = null): array
+    {
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'especie' => ['required', 'string', Rule::in(self::ESPECIES)],
@@ -71,7 +112,12 @@ class MascotaController extends Controller
             'sexo' => ['nullable', Rule::in(['macho', 'hembra', 'no_especificado'])],
             'fecha_nacimiento' => ['nullable', 'date', 'before_or_equal:today'],
             'color' => ['nullable', 'string', 'max:255'],
-            'microchip' => ['nullable', 'string', 'max:255', Rule::unique('mascotas', 'microchip')],
+            'microchip' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('mascotas', 'microchip')->ignore($mascota),
+            ],
             'esterilizado' => ['sometimes', 'boolean'],
             'observaciones' => ['nullable', 'string', 'max:5000'],
         ], [
@@ -83,13 +129,6 @@ class MascotaController extends Controller
 
         $data['esterilizado'] = $request->boolean('esterilizado');
 
-        DB::transaction(function () use ($data, $propietario): void {
-            $mascota = $this->mascotaService->create($data);
-            $this->mascotaService->assignOwner($mascota, $propietario, true);
-        });
-
-        return redirect()
-            ->route('portal.propietarios.show', $propietario)
-            ->with('success', 'La mascota se registró y quedó asociada al propietario.');
+        return $data;
     }
 }

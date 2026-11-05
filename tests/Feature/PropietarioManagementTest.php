@@ -234,6 +234,110 @@ class PropietarioManagementTest extends TestCase
             ->assertDontSee('Nube');
     }
 
+    public function test_administrator_can_view_a_pet_record_and_its_active_owners(): void
+    {
+        $administrator = $this->createAdministrator();
+        $owner = $this->createOwner();
+        $pet = $this->createPet($owner, [
+            'nombre' => 'Nube',
+            'especie' => 'perro',
+            'observaciones' => 'Requiere dieta especial',
+        ]);
+
+        $this->actingAs($administrator)
+            ->get(route('portal.mascotas.show', $pet))
+            ->assertOk()
+            ->assertSee('Nube')
+            ->assertSee('Requiere dieta especial')
+            ->assertSee($owner->nombre)
+            ->assertSee('Principal')
+            ->assertSee(route('portal.mascotas.edit', $pet));
+    }
+
+    public function test_administrator_can_update_pet_details_without_changing_system_fields_or_owners(): void
+    {
+        $administrator = $this->createAdministrator();
+        $owner = $this->createOwner();
+        $pet = $this->createPet($owner, [
+            'codigo' => 'M-EDITAR',
+            'microchip' => 'CHIP-EDITAR',
+            'validado_por' => $administrator->id,
+        ]);
+
+        $this->actingAs($administrator)
+            ->put(route('portal.mascotas.update', $pet), [
+                'nombre' => 'Luna nueva',
+                'especie' => 'gato',
+                'raza' => 'Criolla',
+                'sexo' => 'hembra',
+                'color' => 'gris',
+                'microchip' => 'CHIP-EDITAR',
+                'esterilizado' => '1',
+                'observaciones' => 'Control anual',
+                'codigo' => 'M-ALTERADO',
+                'estado' => 'inactivo',
+                'validado_por' => null,
+            ])
+            ->assertRedirect(route('portal.mascotas.show', $pet));
+
+        $pet->refresh();
+
+        $this->assertSame('Luna nueva', $pet->nombre);
+        $this->assertSame('gato', $pet->especie);
+        $this->assertTrue($pet->esterilizado);
+        $this->assertSame('M-EDITAR', $pet->codigo);
+        $this->assertSame('activo', $pet->estado);
+        $this->assertSame($administrator->id, $pet->validado_por);
+        $this->assertDatabaseHas('mascota_propietario', [
+            'mascota_id' => $pet->id,
+            'propietario_id' => $owner->id,
+            'es_principal' => true,
+        ]);
+    }
+
+    public function test_pet_update_rejects_a_microchip_owned_by_another_pet(): void
+    {
+        $administrator = $this->createAdministrator();
+        $owner = $this->createOwner();
+        $petWithChip = $this->createPet($owner, ['microchip' => 'CHIP-EXISTENTE']);
+        $petToUpdate = $this->createPet($owner, [
+            'codigo' => 'M-002',
+            'nombre' => 'Coco',
+        ]);
+
+        $this->actingAs($administrator)
+            ->from(route('portal.mascotas.edit', $petToUpdate))
+            ->put(route('portal.mascotas.update', $petToUpdate), [
+                'nombre' => 'Coco',
+                'especie' => 'gato',
+                'microchip' => 'CHIP-EXISTENTE',
+            ])
+            ->assertRedirect(route('portal.mascotas.edit', $petToUpdate))
+            ->assertSessionHasErrors('microchip');
+
+        $this->assertSame('CHIP-EXISTENTE', $petWithChip->refresh()->microchip);
+        $this->assertNull($petToUpdate->refresh()->microchip);
+    }
+
+    public function test_soft_deleted_pet_is_not_available_for_detail_or_update(): void
+    {
+        $administrator = $this->createAdministrator();
+        $owner = $this->createOwner();
+        $pet = $this->createPet($owner);
+        $pet->delete();
+
+        $this->actingAs($administrator)
+            ->get(route('portal.mascotas.show', $pet->id))
+            ->assertNotFound();
+
+        $this->actingAs($administrator)
+            ->put(route('portal.mascotas.update', $pet->id), [
+                'nombre' => 'No debe modificarse',
+                'especie' => 'gato',
+            ])
+            ->assertNotFound();
+    }
+
     public function test_owner_routes_do_not_resolve_soft_deleted_owners(): void
     {
         $administrator = $this->createAdministrator();

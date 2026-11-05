@@ -35,7 +35,9 @@
                 <article class="flex flex-col gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-lowest p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3">
                         <div>
-                            <h3 class="text-lg font-bold text-primary">{{ $mascota->nombre }}</h3>
+                            <h3 class="text-lg font-bold text-primary">
+                                <a href="{{ route('portal.mascotas.show', $mascota) }}" class="hover:underline">{{ $mascota->nombre }}</a>
+                            </h3>
                             <p class="text-sm capitalize text-on-surface-variant">{{ $mascota->especie }}{{ $mascota->raza ? ' · '.$mascota->raza : '' }}</p>
                         </div>
                         <span class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold text-on-surface-variant">{{ $mascota->codigo }}</span>
@@ -56,6 +58,10 @@
                             </dd>
                         </div>
                     </dl>
+                    <a href="{{ route('portal.mascotas.edit', $mascota) }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-outline-variant px-3 text-sm font-semibold text-primary hover:bg-surface-container-low">
+                        <span class="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
+                        Editar ficha
+                    </a>
                 </article>
             @empty
                 <div class="grid min-h-48 place-items-center rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest px-6 py-10 text-center sm:col-span-2 xl:col-span-3">

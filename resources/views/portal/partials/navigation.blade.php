@@ -4,6 +4,7 @@
         ['route' => 'portal.dashboard', 'label' => 'Resumen', 'icon' => 'space_dashboard', 'active' => request()->routeIs('portal.dashboard')],
         ['route' => 'portal.propietarios.index', 'label' => 'Propietarios', 'icon' => 'group', 'active' => request()->routeIs('portal.propietarios.*')],
         ['route' => 'portal.mascotas.index', 'label' => 'Mascotas', 'icon' => 'pets', 'active' => request()->routeIs('portal.mascotas.*', 'portal.propietarios.mascotas.*')],
+        ['route' => 'portal.profesionales.index', 'label' => 'Profesionales', 'icon' => 'medical_services', 'active' => request()->routeIs('portal.profesionales.*', 'portal.especialidades.*')],
     ];
 @endphp
 
