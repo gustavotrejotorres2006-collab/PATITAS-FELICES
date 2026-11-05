@@ -22,16 +22,21 @@ class RoleMiddleware
             return $next($request);
         }
 
-        $userRole = $request->user()?->role?->nombre;
+        $user = $request->user();
+        $userRole = $user?->role;
         $allowedRoles = [];
 
         foreach ($roles as $roleGroup) {
-            foreach (explode(',', $roleGroup) as $role) {
-                $allowedRoles[] = strtolower(trim($role));
+            foreach (explode(',', $roleGroup) as $allowedRole) {
+                $allowedRoles[] = strtolower(trim($allowedRole));
             }
         }
 
-        if ($userRole !== null && in_array(strtolower($userRole), $allowedRoles, true)) {
+        if (
+            $user?->estado === 'activo'
+            && $userRole?->activo
+            && in_array(strtolower($userRole->nombre), $allowedRoles, true)
+        ) {
             return $next($request);
         }
 

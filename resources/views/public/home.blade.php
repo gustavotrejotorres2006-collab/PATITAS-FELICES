@@ -7,12 +7,14 @@
     <a href="#servicios" class="rounded-md text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary">Servicios</a>
     <a href="#equipo" class="rounded-md text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary">Nuestro cuidado</a>
     <a href="#contacto" class="rounded-md text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary">Contacto</a>
+    <a href="{{ route('login') }}" class="rounded-md text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary">Portal del personal</a>
 @endsection
 
 @section('mobile-navigation')
     <a href="#servicios" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Servicios</a>
     <a href="#equipo" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Nuestro cuidado</a>
     <a href="#contacto" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Contacto</a>
+    <a href="{{ route('login') }}" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Portal del personal</a>
 @endsection
 
 @section('header-actions')

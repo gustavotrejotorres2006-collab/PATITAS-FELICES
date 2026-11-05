@@ -14,7 +14,7 @@ class AuthService
      */
     public function login(array $credentials): User
     {
-        if (! Auth::attempt($credentials)) {
+        if (! Auth::attempt(array_merge($credentials, ['estado' => 'activo']))) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas no son válidas.'],
             ]);

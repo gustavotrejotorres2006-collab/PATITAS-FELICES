@@ -12,6 +12,7 @@ class BladeLayoutsTest extends TestCase
             ->assertOk()
             ->assertSee('Cuidado veterinario')
             ->assertSee('Servicios')
+            ->assertSee('Portal del personal')
             ->assertSee('Saltar al contenido')
             ->assertSee('plus-jakarta-sans-400-normal');
     }
