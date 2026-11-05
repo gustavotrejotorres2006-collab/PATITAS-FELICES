@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Portal\MascotaController;
+use App\Http\Controllers\Portal\PropietarioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,6 +20,19 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::get('/portal', function () {
-    return view('portal.dashboard');
-})->middleware(['auth', 'role:Administrador'])->name('portal.dashboard');
+Route::middleware(['auth', 'role:Administrador'])
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function (): void {
+        Route::get('/', function () {
+            return view('portal.dashboard');
+        })->name('dashboard');
+
+        Route::resource('propietarios', PropietarioController::class)->except(['destroy']);
+        Route::get('mascotas', [MascotaController::class, 'index'])->name('mascotas.index');
+
+        Route::get('propietarios/{propietario}/mascotas/create', [MascotaController::class, 'create'])
+            ->name('propietarios.mascotas.create');
+        Route::post('propietarios/{propietario}/mascotas', [MascotaController::class, 'store'])
+            ->name('propietarios.mascotas.store');
+    });

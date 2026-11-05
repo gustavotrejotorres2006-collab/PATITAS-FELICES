@@ -5,32 +5,6 @@
 @section('page-heading', 'Resumen del portal')
 @section('meta-description', 'Panel privado para la gestión diaria de Patitas Felices.')
 
-@section('portal-navigation')
-    <a href="#resumen" aria-current="page" class="flex min-h-11 items-center gap-3 rounded-lg bg-primary-container px-3 text-sm font-semibold text-on-primary">
-        <span class="material-symbols-outlined text-xl" aria-hidden="true">space_dashboard</span>
-        Resumen
-    </a>
-    <a href="#pacientes" class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
-        <span class="material-symbols-outlined text-xl" aria-hidden="true">pets</span>
-        Pacientes
-    </a>
-    <a href="#citas" class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
-        <span class="material-symbols-outlined text-xl" aria-hidden="true">calendar_month</span>
-        Citas
-    </a>
-    <a href="#inventario" class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
-        <span class="material-symbols-outlined text-xl" aria-hidden="true">inventory_2</span>
-        Inventario
-    </a>
-@endsection
-
-@section('portal-mobile-navigation')
-    <a href="#resumen" aria-current="page" class="shrink-0 rounded-full bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary">Resumen</a>
-    <a href="#pacientes" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Pacientes</a>
-    <a href="#citas" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Citas</a>
-    <a href="#inventario" class="shrink-0 rounded-full bg-surface-container px-4 py-2 text-sm font-semibold text-primary">Inventario</a>
-@endsection
-
 @section('breadcrumbs')
     <nav aria-label="Ruta de navegación" class="mb-6 text-sm text-on-surface-variant">
         <span aria-current="page" class="font-semibold text-primary">Inicio</span>
@@ -88,12 +62,12 @@
                 </div>
                 <span class="material-symbols-outlined text-2xl text-secondary" aria-hidden="true">bolt</span>
             </div>
-            <a href="#pacientes" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
-                Consultar pacientes
+            <a href="{{ route('portal.propietarios.index') }}" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
+                Consultar propietarios
                 <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
             </a>
-            <a href="#citas" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
-                Revisar la agenda
+            <a href="{{ route('portal.mascotas.index') }}" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
+                Consultar mascotas
                 <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
             </a>
             <a id="inventario" href="#inventario" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">

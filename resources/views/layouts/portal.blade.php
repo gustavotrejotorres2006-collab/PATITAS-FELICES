@@ -31,7 +31,7 @@
                 </a>
 
                 <nav aria-label="Navegación del portal" class="flex-1 space-y-1 px-4 py-6">
-                    @yield('portal-navigation')
+                    @include('portal.partials.navigation', ['mobile' => false])
                 </nav>
 
                 <div class="border-t border-outline-variant/40 p-4">
@@ -83,7 +83,7 @@
                         </div>
                     </div>
                     <nav aria-label="Secciones del portal" class="flex gap-2 overflow-x-auto border-t border-outline-variant/40 px-4 py-2 md:hidden">
-                        @yield('portal-mobile-navigation')
+                        @include('portal.partials.navigation', ['mobile' => true])
                     </nav>
                 </header>
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Propietario;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class PropietarioService
 {
@@ -12,6 +13,8 @@ class PropietarioService
      */
     public function create(array $data): Propietario
     {
+        $data['codigo'] ??= 'P-'.Str::upper((string) Str::ulid());
+
         return Propietario::query()->create($data);
     }
 

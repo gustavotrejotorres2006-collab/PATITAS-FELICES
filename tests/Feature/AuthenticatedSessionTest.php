@@ -75,7 +75,10 @@ class AuthenticatedSessionTest extends TestCase
     public function test_dashboard_forbids_users_without_the_administrator_role(): void
     {
         $role = Role::query()->create(['nombre' => 'Recepcionista']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+            'estado' => 'activo',
+        ]);
 
         $this->actingAs($user)
             ->get(route('portal.dashboard'))
@@ -88,7 +91,10 @@ class AuthenticatedSessionTest extends TestCase
             'nombre' => 'Administrador',
             'activo' => false,
         ]);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+            'estado' => 'activo',
+        ]);
 
         $this->actingAs($user)
             ->get(route('portal.dashboard'))
@@ -135,6 +141,7 @@ class AuthenticatedSessionTest extends TestCase
 
         return User::factory()->create(array_merge([
             'role_id' => $role->id,
+            'estado' => 'activo',
             'password' => 'password',
         ], $attributes));
     }
