@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Portal\CitaController;
 use App\Http\Controllers\Portal\EspecialidadController;
 use App\Http\Controllers\Portal\MascotaController;
 use App\Http\Controllers\Portal\ProfesionalController;
@@ -44,4 +45,14 @@ Route::middleware(['auth', 'role:Administrador'])
             ->name('propietarios.mascotas.create');
         Route::post('propietarios/{propietario}/mascotas', [MascotaController::class, 'store'])
             ->name('propietarios.mascotas.store');
+    });
+
+Route::middleware(['auth', 'role:Administrador,Recepcionista'])
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function (): void {
+        Route::resource('citas', CitaController::class)
+            ->only(['index', 'create', 'store']);
+        Route::patch('citas/{cita}/cancelar', [CitaController::class, 'cancel'])
+            ->name('citas.cancelar');
     });

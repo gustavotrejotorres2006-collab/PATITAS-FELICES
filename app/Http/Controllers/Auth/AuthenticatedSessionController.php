@@ -28,8 +28,12 @@ class AuthenticatedSessionController extends Controller
             'password.required' => 'Ingresa tu contraseña.',
         ]);
 
-        $this->authService->login($credentials);
+        $user = $this->authService->login($credentials);
         $request->session()->regenerate();
+
+        if (strtolower($user->role?->nombre ?? '') === 'recepcionista') {
+            return redirect()->route('portal.citas.index');
+        }
 
         return redirect()->intended(route('portal.dashboard'));
     }

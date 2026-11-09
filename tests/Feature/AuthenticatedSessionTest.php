@@ -36,6 +36,25 @@ class AuthenticatedSessionTest extends TestCase
             ->assertSee('Resumen del portal');
     }
 
+    public function test_active_receptionist_is_redirected_to_the_appointment_agenda_after_login(): void
+    {
+        $role = Role::query()->create(['nombre' => 'Recepcionista']);
+        $receptionist = User::factory()->create([
+            'role_id' => $role->id,
+            'estado' => 'activo',
+            'password' => 'password',
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $receptionist->email,
+            'password' => 'password',
+        ])
+            ->assertRedirect(route('portal.citas.index'));
+
+        $this->assertAuthenticatedAs($receptionist);
+        $this->get(route('portal.citas.index'))->assertOk();
+    }
+
     public function test_invalid_credentials_return_a_login_error(): void
     {
         $administrator = $this->createAdministrator();
