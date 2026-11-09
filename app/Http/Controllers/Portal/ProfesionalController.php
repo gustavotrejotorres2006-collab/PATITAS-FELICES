@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Especialidad;
 use App\Models\Profesional;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -56,19 +58,26 @@ class ProfesionalController extends Controller
     public function create(): View
     {
         $especialidades = Especialidad::query()->orderBy('nombre')->get();
+        $profesional = new Profesional;
 
-        return view('portal.profesionales.create', compact('especialidades'));
+        return view('portal.profesionales.create', compact('especialidades', 'profesional'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedProfessionalData($request);
         $especialidades = $data['especialidades'] ?? [];
-        unset($data['especialidades']);
+        $usuarioEmail = $data['usuario_email'] ?? null;
+        $usuarioPassword = $data['usuario_password'] ?? null;
+        unset($data['especialidades'], $data['usuario_email'], $data['usuario_password']);
 
-        $profesional = DB::transaction(function () use ($data, $especialidades): Profesional {
+        $profesional = DB::transaction(function () use ($data, $especialidades, $usuarioEmail, $usuarioPassword): Profesional {
             $profesional = Profesional::query()->create($data);
             $profesional->especialidades()->sync($especialidades);
+
+            if ($usuarioEmail !== null && $usuarioEmail !== '') {
+                $this->syncVeterinarianAccount($profesional, $usuarioEmail, $usuarioPassword);
+            }
 
             return $profesional;
         });
@@ -83,6 +92,7 @@ class ProfesionalController extends Controller
         $profesional->load([
             'especialidades' => fn (BelongsToMany $query) => $query->orderBy('nombre'),
             'horarios' => fn (HasMany $query) => $query->orderBy('dia_semana'),
+            'user',
         ]);
 
         return view('portal.profesionales.show', [
@@ -93,7 +103,7 @@ class ProfesionalController extends Controller
 
     public function edit(Profesional $profesional): View
     {
-        $profesional->load(['especialidades:id', 'horarios']);
+        $profesional->load(['especialidades:id', 'horarios', 'user']);
         $especialidades = Especialidad::query()->orderBy('nombre')->get();
         $horarios = $profesional->horarios->keyBy('dia_semana');
 
@@ -110,11 +120,18 @@ class ProfesionalController extends Controller
         $data = $this->validatedProfessionalData($request, $profesional, true);
         $especialidades = $data['especialidades'] ?? [];
         $horarios = $data['horarios'];
-        unset($data['especialidades'], $data['horarios']);
+        $usuarioEmail = $data['usuario_email'] ?? null;
+        $usuarioPassword = $data['usuario_password'] ?? null;
+        unset($data['especialidades'], $data['horarios'], $data['usuario_email'], $data['usuario_password']);
 
-        DB::transaction(function () use ($profesional, $data, $especialidades, $horarios): void {
+        DB::transaction(function () use ($profesional, $data, $especialidades, $horarios, $usuarioEmail, $usuarioPassword): void {
             $profesional->update($data);
             $profesional->especialidades()->sync($especialidades);
+
+            if ($usuarioEmail !== null && $usuarioEmail !== '') {
+                $this->syncVeterinarianAccount($profesional, $usuarioEmail, $usuarioPassword);
+            }
+
             $profesional->horarios()->delete();
 
             foreach ($horarios as $dia => $horario) {
@@ -157,6 +174,15 @@ class ProfesionalController extends Controller
             'estado' => ['required', Rule::in(['activo', 'inactivo'])],
             'especialidades' => ['nullable', 'array'],
             'especialidades.*' => ['integer', 'distinct', Rule::exists('especialidades', 'id')],
+            'usuario_email' => [
+                $profesional?->user_id ? 'required' : 'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($profesional?->user_id),
+            ],
+            'usuario_password' => $profesional?->user_id
+                ? ['nullable', 'string', 'min:8']
+                : ['required_with:usuario_email', 'string', 'min:8'],
         ];
 
         if ($withSchedule) {
@@ -198,5 +224,51 @@ class ProfesionalController extends Controller
         }
 
         return $data;
+    }
+
+    private function syncVeterinarianAccount(
+        Profesional $profesional,
+        string $email,
+        ?string $password,
+    ): void {
+        $user = $profesional->user;
+
+        if ($user instanceof User) {
+            $user->name = trim($profesional->nombre.' '.$profesional->apellido);
+            $user->email = $email;
+
+            if ($password !== null && $password !== '') {
+                $user->password = $password;
+            }
+
+            $user->save();
+
+            return;
+        }
+
+        $role = Role::query()->firstOrCreate(
+            ['nombre' => 'Veterinario'],
+            [
+                'descripcion' => 'Acceso al módulo médico y a expedientes clínicos.',
+                'activo' => true,
+            ],
+        );
+
+        if (! $role->activo) {
+            throw ValidationException::withMessages([
+                'usuario_email' => 'El rol Veterinario está inactivo. Actívalo antes de crear cuentas clínicas.',
+            ]);
+        }
+
+        $user = User::query()->create([
+            'name' => trim($profesional->nombre.' '.$profesional->apellido),
+            'email' => $email,
+            'password' => $password,
+            'role_id' => $role->id,
+            'estado' => 'activo',
+        ]);
+
+        $profesional->user()->associate($user);
+        $profesional->save();
     }
 }

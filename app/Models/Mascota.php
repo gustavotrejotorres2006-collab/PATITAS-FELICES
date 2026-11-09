@@ -59,4 +59,9 @@ class Mascota extends Model
     {
         return $this->hasMany(Cita::class, 'mascota_id');
     }
+
+    public function atenciones(): HasMany
+    {
+        return $this->hasMany(Atencion::class, 'mascota_id');
+    }
 }

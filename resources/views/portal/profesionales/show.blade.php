@@ -30,6 +30,10 @@
             <div class="flex flex-col gap-2">
                 <h2 class="text-2xl font-bold text-primary">{{ $profesional->nombre }} {{ $profesional->apellido }}</h2>
                 <p class="text-on-surface-variant">{{ $profesional->cedula_profesional ?: 'Sin cédula registrada' }} · {{ $profesional->telefono ?: 'Sin teléfono' }}</p>
+                <p class="text-sm text-on-surface-variant">
+                    Cuenta clínica:
+                    <span class="font-semibold text-primary">{{ $profesional->user?->email ?? 'Sin cuenta vinculada' }}</span>
+                </p>
                 <span class="{{ $profesional->estado === 'activo' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container text-on-surface-variant' }} w-fit rounded-full px-3 py-1 text-xs font-bold">
                     {{ $profesional->estado === 'activo' ? 'Activo' : 'Inactivo' }}
                 </span>

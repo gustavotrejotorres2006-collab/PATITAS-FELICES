@@ -35,6 +35,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('portal.citas.index');
         }
 
+        if (strtolower($user->role?->nombre ?? '') === 'veterinario') {
+            return redirect()->route('portal.atenciones.index');
+        }
+
         return redirect()->intended(route('portal.dashboard'));
     }
 

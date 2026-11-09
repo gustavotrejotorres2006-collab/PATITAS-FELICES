@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Portal\AtencionController;
 use App\Http\Controllers\Portal\CitaController;
 use App\Http\Controllers\Portal\EspecialidadController;
 use App\Http\Controllers\Portal\MascotaController;
@@ -55,4 +56,15 @@ Route::middleware(['auth', 'role:Administrador,Recepcionista'])
             ->only(['index', 'create', 'store']);
         Route::patch('citas/{cita}/cancelar', [CitaController::class, 'cancel'])
             ->name('citas.cancelar');
+    });
+
+Route::middleware(['auth', 'role:Veterinario'])
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function (): void {
+        Route::get('atenciones', [AtencionController::class, 'index'])->name('atenciones.index');
+        Route::get('atenciones/{cita}/create', [AtencionController::class, 'create'])->name('atenciones.create');
+        Route::post('atenciones/{cita}', [AtencionController::class, 'store'])->name('atenciones.store');
+        Route::get('expedientes/{atencion}', [AtencionController::class, 'show'])->name('atenciones.show');
+        Route::post('expedientes/{atencion}/notas', [AtencionController::class, 'storeNote'])->name('atenciones.notas.store');
     });

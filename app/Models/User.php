@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -44,9 +45,9 @@ class User extends Authenticatable
         return $this->hasMany(Propietario::class, 'user_id');
     }
 
-    public function profesional(): HasMany
+    public function profesional(): HasOne
     {
-        return $this->hasMany(Profesional::class, 'user_id');
+        return $this->hasOne(Profesional::class, 'user_id');
     }
 
     public function notificaciones(): HasMany

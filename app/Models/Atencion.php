@@ -10,10 +10,11 @@ class Atencion extends Model
 {
     protected $table = 'atenciones';
 
-    protected $fillable = ['folio', 'cita_id', 'mascota_id', 'propietario_id', 'profesional_id', 'creado_por', 'fecha_atencion', 'estado', 'motivo'];
+    protected $fillable = ['folio', 'cita_id', 'mascota_id', 'propietario_id', 'profesional_id', 'creado_por', 'fecha_atencion', 'estado', 'motivo', 'hospitalizacion_recomendada'];
 
     protected $casts = [
         'fecha_atencion' => 'datetime',
+        'hospitalizacion_recomendada' => 'boolean',
     ];
 
     public function cita(): BelongsTo
@@ -39,5 +40,20 @@ class Atencion extends Model
     public function signosVitales(): HasMany
     {
         return $this->hasMany(SignosVitales::class, 'atencion_id');
+    }
+
+    public function notas(): HasMany
+    {
+        return $this->hasMany(NotaClinica::class, 'atencion_id');
+    }
+
+    public function diagnosticos(): HasMany
+    {
+        return $this->hasMany(AtencionDiagnostico::class, 'atencion_id');
+    }
+
+    public function vacunaciones(): HasMany
+    {
+        return $this->hasMany(Vacunacion::class, 'atencion_id');
     }
 }

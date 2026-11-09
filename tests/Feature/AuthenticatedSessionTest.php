@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Profesional;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,6 +54,29 @@ class AuthenticatedSessionTest extends TestCase
 
         $this->assertAuthenticatedAs($receptionist);
         $this->get(route('portal.citas.index'))->assertOk();
+    }
+
+    public function test_active_veterinarian_is_redirected_to_their_clinical_agenda_after_login(): void
+    {
+        $role = Role::query()->create(['nombre' => 'Veterinario']);
+        $veterinarian = User::factory()->create([
+            'role_id' => $role->id,
+            'estado' => 'activo',
+            'password' => 'password',
+        ]);
+        Profesional::query()->create([
+            'user_id' => $veterinarian->id,
+            'nombre' => $veterinarian->name,
+            'estado' => 'activo',
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $veterinarian->email,
+            'password' => 'password',
+        ])
+            ->assertRedirect(route('portal.atenciones.index'));
+
+        $this->assertAuthenticatedAs($veterinarian);
     }
 
     public function test_invalid_credentials_return_a_login_error(): void

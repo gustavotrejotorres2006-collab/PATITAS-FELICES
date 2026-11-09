@@ -7,6 +7,7 @@ use App\Models\Profesional;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class ProfesionalManagementTest extends TestCase
@@ -57,6 +58,63 @@ class ProfesionalManagementTest extends TestCase
         $this->assertDatabaseHas('profesional_especialidad', [
             'profesional_id' => $profesional->id,
             'especialidad_id' => $specialty->id,
+        ]);
+    }
+
+    public function test_administrator_can_create_a_linked_veterinarian_account_from_a_professional_profile(): void
+    {
+        $administrator = $this->createAdministrator();
+
+        $response = $this->actingAs($administrator)
+            ->post(route('portal.profesionales.store'), [
+                'nombre' => 'Laura',
+                'apellido' => 'Méndez',
+                'estado' => 'activo',
+                'usuario_email' => 'laura@example.test',
+                'usuario_password' => 'segura1234',
+            ]);
+        $response->assertSessionHasNoErrors();
+
+        $professional = Profesional::query()->where('nombre', 'Laura')->firstOrFail();
+        $response->assertRedirect(route('portal.profesionales.edit', $professional));
+        $veterinarian = User::query()->where('email', 'laura@example.test')->firstOrFail();
+
+        $this->assertSame($veterinarian->id, $professional->user_id);
+        $this->assertSame('Veterinario', $veterinarian->role->nombre);
+        $this->assertTrue(Hash::check('segura1234', $veterinarian->password));
+        $this->assertDatabaseHas('roles', [
+            'nombre' => 'Veterinario',
+            'activo' => true,
+        ]);
+    }
+
+    public function test_administrator_cannot_create_a_veterinarian_account_with_an_inactive_role(): void
+    {
+        $administrator = $this->createAdministrator();
+        Role::query()->create([
+            'nombre' => 'Veterinario',
+            'activo' => false,
+        ]);
+
+        $response = $this->actingAs($administrator)
+            ->from(route('portal.profesionales.create'))
+            ->post(route('portal.profesionales.store'), [
+                'nombre' => 'Laura',
+                'apellido' => 'Méndez',
+                'estado' => 'activo',
+                'usuario_email' => 'laura@example.test',
+                'usuario_password' => 'segura1234',
+            ]);
+
+        $response->assertRedirect(route('portal.profesionales.create'))
+            ->assertSessionHasErrors([
+                'usuario_email' => 'El rol Veterinario está inactivo. Actívalo antes de crear cuentas clínicas.',
+            ]);
+        $this->assertDatabaseMissing('users', ['email' => 'laura@example.test']);
+        $this->assertDatabaseMissing('profesionales', ['nombre' => 'Laura']);
+        $this->assertDatabaseHas('roles', [
+            'nombre' => 'Veterinario',
+            'activo' => false,
         ]);
     }
 
