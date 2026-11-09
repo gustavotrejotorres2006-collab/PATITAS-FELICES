@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Portal\AtencionController;
 use App\Http\Controllers\Portal\CitaController;
 use App\Http\Controllers\Portal\EspecialidadController;
+use App\Http\Controllers\Portal\HospitalizacionController;
 use App\Http\Controllers\Portal\InventarioController;
 use App\Http\Controllers\Portal\MascotaController;
 use App\Http\Controllers\Portal\ProfesionalController;
@@ -78,4 +79,26 @@ Route::middleware(['auth', 'role:Veterinario'])
         Route::post('atenciones/{cita}', [AtencionController::class, 'store'])->name('atenciones.store');
         Route::get('expedientes/{atencion}', [AtencionController::class, 'show'])->name('atenciones.show');
         Route::post('expedientes/{atencion}/notas', [AtencionController::class, 'storeNote'])->name('atenciones.notas.store');
+    });
+
+Route::middleware(['auth', 'role:Administrador,Veterinario'])
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function (): void {
+        Route::get('hospitalizaciones', [HospitalizacionController::class, 'index'])
+            ->name('hospitalizaciones.index');
+        Route::post('hospitalizaciones', [HospitalizacionController::class, 'storeHospitalization'])
+            ->name('hospitalizaciones.store');
+        Route::post('hospitalizaciones/{hospitalizacion}/monitoreos', [HospitalizacionController::class, 'storeMonitoring'])
+            ->name('hospitalizaciones.monitoreos.store');
+        Route::post('hospitalizaciones/{hospitalizacion}/alta', [HospitalizacionController::class, 'discharge'])
+            ->name('hospitalizaciones.alta');
+        Route::post('cirugias', [HospitalizacionController::class, 'storeSurgery'])
+            ->name('cirugias.store');
+        Route::post('cirugias/{cirugia}/completar', [HospitalizacionController::class, 'completeSurgery'])
+            ->name('cirugias.completar');
+        Route::post('espacios-clinicos', [HospitalizacionController::class, 'storeSpace'])
+            ->name('espacios.store');
+        Route::post('espacios-clinicos/{espacio}/desinfectar', [HospitalizacionController::class, 'disinfect'])
+            ->name('espacios.desinfectar');
     });

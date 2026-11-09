@@ -77,6 +77,10 @@ class CitaController extends Controller
             ->with('categoria:id,nombre')
             ->orderBy('nombre')
             ->get()
+            ->reject(fn (Servicio $servicio): bool => Str::contains(
+                Str::ascii(Str::lower($servicio->categoria?->nombre ?? '')),
+                'cirug',
+            ))
             ->sortBy(fn (Servicio $servicio): string => sprintf(
                 '%d-%s',
                 $this->servicePriority($servicio),

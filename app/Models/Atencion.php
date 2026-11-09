@@ -56,4 +56,14 @@ class Atencion extends Model
     {
         return $this->hasMany(Vacunacion::class, 'atencion_id');
     }
+
+    public function cirugias(): HasMany
+    {
+        return $this->hasMany(Cirugia::class, 'atencion_id');
+    }
+
+    public function hospitalizaciones(): HasMany
+    {
+        return $this->hasMany(Hospitalizacion::class, 'atencion_id');
+    }
 }

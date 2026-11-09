@@ -2,9 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Atencion;
 use App\Models\CategoriaServicio;
+use App\Models\Cirugia;
 use App\Models\Cita;
+use App\Models\EspacioClinico;
 use App\Models\Mascota;
+use App\Models\NotaClinica;
 use App\Models\Profesional;
 use App\Models\Propietario;
 use App\Models\Role;
@@ -75,28 +79,26 @@ class CitaManagementTest extends TestCase
         ]);
     }
 
-    public function test_surgery_requires_ninety_minutes_between_appointments(): void
+    public function test_surgery_service_must_use_the_consent_and_operating_room_workflow(): void
     {
         $administrator = $this->createUserWithRole('Administrador');
         [$owner, $pet] = $this->createPetAndOwner();
         $professional = $this->createProfessional();
-        $consultation = $this->createService('Consulta', 'Consulta general', 30, 100);
         $surgery = $this->createService('Cirugía', 'Cirugía menor', 30, 500);
-        $start = now()->addDay()->setTime(9, 0);
-
-        $this->actingAs($administrator)
-            ->post(route('portal.citas.store'), $this->appointmentData($owner, $pet, $professional, $consultation, $start))
-            ->assertRedirect(route('portal.citas.index'));
 
         $this->from(route('portal.citas.create'))
-            ->post(route('portal.citas.store'), $this->appointmentData($owner, $pet, $professional, $surgery, $start->copy()->addMinutes(119)))
+            ->actingAs($administrator)
+            ->post(route('portal.citas.store'), $this->appointmentData(
+                $owner,
+                $pet,
+                $professional,
+                $surgery,
+                now()->addDay()->setTime(9, 0),
+            ))
             ->assertRedirect(route('portal.citas.create'))
-            ->assertSessionHasErrors('inicio');
+            ->assertSessionHasErrors('servicios');
 
-        $this->post(route('portal.citas.store'), $this->appointmentData($owner, $pet, $professional, $surgery, $start->copy()->addMinutes(120)))
-            ->assertRedirect(route('portal.citas.index'));
-
-        $this->assertDatabaseCount('citas', 2);
+        $this->assertDatabaseCount('citas', 0);
     }
 
     public function test_cancelling_an_appointment_releases_its_time_slot(): void
@@ -124,6 +126,71 @@ class CitaManagementTest extends TestCase
             'estado' => 'cancelada',
         ]);
         $this->assertDatabaseCount('citas', 2);
+    }
+
+    public function test_appointment_cannot_be_scheduled_during_a_surgery_reserved_for_the_professional(): void
+    {
+        $administrator = $this->createUserWithRole('Administrador');
+        [$owner, $pet] = $this->createPetAndOwner();
+        $pet->propietarios()->attach($owner, [
+            'es_principal' => true,
+            'fecha_inicio' => now()->toDateString(),
+            'estado' => 'activo',
+        ]);
+        $surgeon = $this->createProfessional();
+        $anesthesiologist = $this->createProfessional();
+        $attention = Atencion::query()->create([
+            'folio' => 'ATN-SURGERY-001',
+            'mascota_id' => $pet->id,
+            'propietario_id' => $owner->id,
+            'profesional_id' => $surgeon->id,
+            'creado_por' => $administrator->id,
+            'fecha_atencion' => now(),
+            'estado' => 'abierta',
+            'motivo' => 'Evaluación preoperatoria',
+        ]);
+        NotaClinica::query()->create([
+            'atencion_id' => $attention->id,
+            'profesional_id' => $surgeon->id,
+            'autor_id' => $administrator->id,
+            'contenido' => 'Evaluación preoperatoria.',
+            'version' => 1,
+        ]);
+        $operatingRoom = EspacioClinico::query()->create([
+            'nombre' => 'Quirófano bloqueado',
+            'tipo' => 'quirofano',
+            'estado' => 'disponible',
+            'activo' => true,
+        ]);
+        $surgeryStart = now()->addDay()->setTime(9, 0);
+        Cirugia::query()->create([
+            'folio' => 'CIR-BLOCK-001',
+            'atencion_id' => $attention->id,
+            'espacio_id' => $operatingRoom->id,
+            'cirujano_id' => $surgeon->id,
+            'anestesiologo_id' => $anesthesiologist->id,
+            'propietario_id' => $owner->id,
+            'programada_at' => $surgeryStart,
+            'duracion_minutos' => 60,
+            'estado' => 'programada',
+            'consentimiento_firmado_at' => now(),
+            'consentimiento_verificado_por' => $administrator->id,
+        ]);
+        $consultation = $this->createService('Consulta', 'Consulta general', 30, 100);
+
+        $this->actingAs($administrator)
+            ->from(route('portal.citas.create'))
+            ->post(route('portal.citas.store'), $this->appointmentData(
+                $owner,
+                $pet,
+                $surgeon,
+                $consultation,
+                $surgeryStart->copy()->addMinutes(30),
+            ))
+            ->assertRedirect(route('portal.citas.create'))
+            ->assertSessionHasErrors('inicio');
+
+        $this->assertDatabaseCount('citas', 0);
     }
 
     public function test_receptionist_can_access_the_agenda_but_not_the_administrative_dashboard(): void

@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Cirugia;
 use App\Models\Cita;
 use App\Models\Mascota;
 use App\Models\Profesional;
 use App\Models\Propietario;
 use App\Models\Servicio;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -51,7 +53,12 @@ class CitaService
         }
 
         $fin = $inicio->addMinutes($duracion);
-        $esCirugia = $this->includesSurgery($servicios);
+
+        if ($this->includesSurgery($servicios)) {
+            throw ValidationException::withMessages([
+                'servicios' => 'Los procedimientos quirúrgicos deben programarse desde el módulo de quirófano para registrar el consentimiento y reservar el espacio.',
+            ]);
+        }
 
         return DB::transaction(function () use (
             $mascota,
@@ -60,7 +67,6 @@ class CitaService
             $servicios,
             $inicio,
             $fin,
-            $esCirugia,
             $urgente,
             $motivo,
             $userId,
@@ -69,6 +75,32 @@ class CitaService
                 ->whereKey($profesional->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            $cirugiasCercanas = Cirugia::query()
+                ->where('estado', 'programada')
+                ->whereBetween('programada_at', [
+                    $inicio->subMinutes(810),
+                    $fin->addMinutes(90),
+                ])
+                ->where(function (Builder $query) use ($profesional): void {
+                    $query->where('cirujano_id', $profesional->id)
+                        ->orWhere('anestesiologo_id', $profesional->id);
+                })
+                ->get();
+
+            foreach ($cirugiasCercanas as $cirugia) {
+                $inicioCirugia = CarbonImmutable::instance($cirugia->programada_at);
+                $finCirugia = $inicioCirugia->addMinutes($cirugia->duracion_minutos);
+
+                if (
+                    $inicioCirugia->lt($fin->addMinutes(90))
+                    && $finCirugia->gt($inicio->subMinutes(90))
+                ) {
+                    throw ValidationException::withMessages([
+                        'inicio' => 'El profesional tiene una cirugía programada en ese horario.',
+                    ]);
+                }
+            }
 
             $citasCercanas = Cita::query()
                 ->where('profesional_id', $profesional->id)
@@ -79,7 +111,7 @@ class CitaService
                 ->get();
 
             foreach ($citasCercanas as $citaExistente) {
-                $separacion = $esCirugia || $this->includesSurgery($citaExistente->servicios)
+                $separacion = $this->includesSurgery($citaExistente->servicios)
                     ? 90
                     : 30;
 
