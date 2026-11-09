@@ -63,8 +63,9 @@ class ClinicaService
         User $user,
         array $data,
         Collection $vacunas,
+        InventarioService $inventarioService,
     ): Atencion {
-        return DB::transaction(function () use ($cita, $profesional, $user, $data, $vacunas): Atencion {
+        return DB::transaction(function () use ($cita, $profesional, $user, $data, $vacunas, $inventarioService): Atencion {
             $cita = Cita::query()->whereKey($cita->id)->lockForUpdate()->firstOrFail();
 
             if (
@@ -128,11 +129,27 @@ class ClinicaService
             }
 
             foreach ($vacunas as $vacuna) {
+                if (! $vacuna->producto || $vacuna->producto->estado !== 'activo') {
+                    throw ValidationException::withMessages([
+                        'vacunas_aplicadas' => "La vacuna {$vacuna->nombre} no tiene un producto activo vinculado al inventario.",
+                    ]);
+                }
+
+                $movimientos = $inventarioService->consume(
+                    $vacuna->producto,
+                    1,
+                    $user,
+                    'Vacuna aplicada durante la atención '.$atencion->folio,
+                    Atencion::class,
+                    $atencion->id,
+                );
+
                 Vacunacion::query()->create([
                     'mascota_id' => $cita->mascota_id,
                     'vacuna_id' => $vacuna->id,
                     'atencion_id' => $atencion->id,
                     'fecha_aplicacion' => CarbonImmutable::today(),
+                    'lote' => $movimientos->first()?->lote?->numero_lote,
                     'aplicada_por' => $user->id,
                 ]);
             }

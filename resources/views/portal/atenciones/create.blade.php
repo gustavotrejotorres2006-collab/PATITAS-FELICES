@@ -106,11 +106,11 @@
                             <input type="checkbox" name="vacunas_aplicadas[]" value="{{ $vacuna->id }}" @checked(in_array((string) $vacuna->id, array_map('strval', old('vacunas_aplicadas', [])), true)) class="size-4 accent-primary">
                             <span>
                                 <span class="block font-semibold">{{ $vacuna->nombre }}</span>
-                                <span class="block text-xs text-on-surface-variant">{{ $vacuna->especie ?: 'Todas las especies' }} · Registrar como aplicada hoy</span>
+                                <span class="block text-xs text-on-surface-variant">{{ $vacuna->especie ?: 'Todas las especies' }} · {{ $vacuna->producto->nombre }} · Registrar como aplicada hoy</span>
                             </span>
                         </label>
                     @empty
-                        <p class="rounded-lg bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">No hay vacunas activas en el catálogo.</p>
+                        <p class="rounded-lg bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">No hay vacunas vinculadas con existencias disponibles.</p>
                     @endforelse
                 </div>
                 @error('vacunas_aplicadas') <p class="text-sm text-error">{{ $message }}</p> @enderror

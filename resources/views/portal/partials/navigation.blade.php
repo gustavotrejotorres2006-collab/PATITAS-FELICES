@@ -2,6 +2,7 @@
     $mobile = $mobile ?? false;
     $esRecepcionista = strtolower(auth()->user()?->role?->nombre ?? '') === 'recepcionista';
     $esVeterinario = strtolower(auth()->user()?->role?->nombre ?? '') === 'veterinario';
+    $esAdministrador = strtolower(auth()->user()?->role?->nombre ?? '') === 'administrador';
     $agenda = ['route' => 'portal.citas.index', 'label' => 'Agenda', 'icon' => 'calendar_month', 'active' => request()->routeIs('portal.citas.*')];
     $expedientes = ['route' => 'portal.atenciones.index', 'label' => 'Atención clínica', 'icon' => 'medical_information', 'active' => request()->routeIs('portal.atenciones.*')];
     $links = match (true) {
@@ -9,6 +10,7 @@
         $esVeterinario => [$expedientes],
         default => [
             ['route' => 'portal.dashboard', 'label' => 'Resumen', 'icon' => 'space_dashboard', 'active' => request()->routeIs('portal.dashboard')],
+            ...($esAdministrador ? [['route' => 'portal.inventario.index', 'label' => 'Inventario', 'icon' => 'inventory_2', 'active' => request()->routeIs('portal.inventario.*')]] : []),
             ['route' => 'portal.propietarios.index', 'label' => 'Propietarios', 'icon' => 'group', 'active' => request()->routeIs('portal.propietarios.*')],
             ['route' => 'portal.mascotas.index', 'label' => 'Mascotas', 'icon' => 'pets', 'active' => request()->routeIs('portal.mascotas.*', 'portal.propietarios.mascotas.*')],
             ['route' => 'portal.profesionales.index', 'label' => 'Profesionales', 'icon' => 'medical_services', 'active' => request()->routeIs('portal.profesionales.*', 'portal.especialidades.*')],

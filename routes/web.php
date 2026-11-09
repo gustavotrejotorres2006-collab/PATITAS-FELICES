@@ -4,9 +4,11 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Portal\AtencionController;
 use App\Http\Controllers\Portal\CitaController;
 use App\Http\Controllers\Portal\EspecialidadController;
+use App\Http\Controllers\Portal\InventarioController;
 use App\Http\Controllers\Portal\MascotaController;
 use App\Http\Controllers\Portal\ProfesionalController;
 use App\Http\Controllers\Portal\PropietarioController;
+use App\Services\InventarioService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,9 +30,18 @@ Route::middleware(['auth', 'role:Administrador'])
     ->prefix('portal')
     ->name('portal.')
     ->group(function (): void {
-        Route::get('/', function () {
-            return view('portal.dashboard');
+        Route::get('/', function (InventarioService $inventarioService) {
+            $productosCriticos = $inventarioService->criticalVaccineProducts();
+
+            return view('portal.dashboard', compact('productosCriticos'));
         })->name('dashboard');
+
+        Route::get('inventario', [InventarioController::class, 'index'])->name('inventario.index');
+        Route::post('inventario/productos', [InventarioController::class, 'storeProduct'])->name('inventario.productos.store');
+        Route::post('inventario/proveedores', [InventarioController::class, 'storeProvider'])->name('inventario.proveedores.store');
+        Route::post('inventario/compras', [InventarioController::class, 'storePurchase'])->name('inventario.compras.store');
+        Route::post('inventario/consumos', [InventarioController::class, 'storeConsumption'])->name('inventario.consumos.store');
+        Route::get('inventario/reportes', [InventarioController::class, 'report'])->name('inventario.reportes');
 
         Route::resource('propietarios', PropietarioController::class)->except(['destroy']);
         Route::resource('mascotas', MascotaController::class)

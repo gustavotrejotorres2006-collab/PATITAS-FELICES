@@ -8,6 +8,8 @@ use App\Models\CatalogoVacuna;
 use App\Models\Cita;
 use App\Models\Profesional;
 use App\Services\ClinicaService;
+use App\Services\InventarioService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,14 +41,27 @@ class AtencionController extends Controller
         $cita->load(['mascota:id,nombre,especie', 'propietario:id,nombre', 'servicios:id,nombre']);
         $vacunas = CatalogoVacuna::query()
             ->where('activo', true)
+            ->whereHas('producto', fn (Builder $query) => $query
+                ->where('estado', 'activo')
+                ->whereHas('lotes', fn (Builder $query) => $query
+                    ->where('estado', 'disponible')
+                    ->where('cantidad_disponible', '>', 0)
+                    ->where(fn (Builder $query) => $query
+                        ->whereNull('fecha_caducidad')
+                        ->orWhereDate('fecha_caducidad', '>=', today()))))
+            ->with('producto')
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'especie']);
+            ->get(['id', 'nombre', 'especie', 'producto_id']);
 
         return view('portal.atenciones.create', compact('cita', 'vacunas'));
     }
 
-    public function store(Request $request, Cita $cita, ClinicaService $clinicaService): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        Cita $cita,
+        ClinicaService $clinicaService,
+        InventarioService $inventarioService,
+    ): RedirectResponse {
         $profesional = $this->authenticatedProfessional($request);
         $this->ensureCitaCanBeAttended($cita, $profesional);
 
@@ -68,7 +83,9 @@ class AtencionController extends Controller
                 'required',
                 'integer',
                 'distinct',
-                Rule::exists('catalogo_vacunas', 'id')->where('activo', true),
+                Rule::exists('catalogo_vacunas', 'id')
+                    ->where('activo', true)
+                    ->whereNotNull('producto_id'),
             ],
         ], [
             'diagnostico.required' => 'Registra al menos un diagnóstico antes de guardar la atención.',
@@ -87,6 +104,7 @@ class AtencionController extends Controller
             $request->user(),
             $data,
             $vacunas,
+            $inventarioService,
         );
 
         return redirect()

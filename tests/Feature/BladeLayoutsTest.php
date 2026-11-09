@@ -19,7 +19,7 @@ class BladeLayoutsTest extends TestCase
 
     public function test_private_dashboard_renders_the_portal_layout(): void
     {
-        $this->view('portal.dashboard')
+        $this->view('portal.dashboard', ['productosCriticos' => collect()])
             ->assertSee('Resumen del portal')
             ->assertSee('Navegación del portal')
             ->assertSee('Pacientes registrados')

@@ -7,6 +7,7 @@ use App\Models\CatalogoVacuna;
 use App\Models\Cita;
 use App\Models\Mascota;
 use App\Models\NotaClinica;
+use App\Models\Producto;
 use App\Models\Profesional;
 use App\Models\Propietario;
 use App\Models\Role;
@@ -23,10 +24,26 @@ class AtencionManagementTest extends TestCase
         [$veterinarian, $professional] = $this->createVeterinarian();
         [$owner, $pet] = $this->createPetAndOwner();
         $appointment = $this->createAppointment($owner, $pet, $professional);
+        $vaccineProduct = Producto::query()->create([
+            'codigo' => 'VAC-RABIA',
+            'nombre' => 'Vacuna contra rabia',
+            'unidad_base' => 'dosis',
+            'precio_venta' => 100,
+            'stock_minimo' => 2,
+            'stock_optimo' => 20,
+            'estado' => 'activo',
+        ]);
+        $vaccineProduct->lotes()->create([
+            'numero_lote' => 'RABIA-001',
+            'cantidad_inicial' => 2,
+            'cantidad_disponible' => 2,
+            'estado' => 'disponible',
+        ]);
         $vaccine = CatalogoVacuna::query()->create([
             'nombre' => 'Rabia',
             'especie' => 'perro',
             'activo' => true,
+            'producto_id' => $vaccineProduct->id,
         ]);
         $unusedVaccine = CatalogoVacuna::query()->create([
             'nombre' => 'Moquillo',
@@ -81,8 +98,18 @@ class AtencionManagementTest extends TestCase
             'mascota_id' => $pet->id,
             'vacuna_id' => $vaccine->id,
             'atencion_id' => $attention->id,
+            'lote' => 'RABIA-001',
             'aplicada_por' => $veterinarian->id,
             'fecha_aplicacion' => now()->startOfDay()->toDateTimeString(),
+        ]);
+        $this->assertDatabaseHas('lotes_inventario', [
+            'producto_id' => $vaccineProduct->id,
+            'cantidad_disponible' => 1,
+        ]);
+        $this->assertDatabaseHas('movimientos_inventario', [
+            'producto_id' => $vaccineProduct->id,
+            'tipo' => 'salida',
+            'cantidad' => 1,
         ]);
         $this->assertDatabaseMissing('vacunaciones', [
             'mascota_id' => $pet->id,
@@ -112,6 +139,46 @@ class AtencionManagementTest extends TestCase
             ->assertSessionHasErrors('diagnostico');
 
         $this->assertDatabaseCount('atenciones', 0);
+        $this->assertDatabaseHas('citas', [
+            'id' => $appointment->id,
+            'estado' => 'pendiente',
+        ]);
+    }
+
+    public function test_vaccine_application_fails_atomically_when_inventory_is_empty(): void
+    {
+        [$veterinarian, $professional] = $this->createVeterinarian();
+        [$owner, $pet] = $this->createPetAndOwner();
+        $appointment = $this->createAppointment($owner, $pet, $professional);
+        $vaccineProduct = Producto::query()->create([
+            'codigo' => 'VAC-EMPTY',
+            'nombre' => 'Vacuna sin existencias',
+            'unidad_base' => 'dosis',
+            'precio_venta' => 100,
+            'stock_minimo' => 1,
+            'stock_optimo' => 10,
+            'estado' => 'activo',
+        ]);
+        $vaccine = CatalogoVacuna::query()->create([
+            'nombre' => 'Vacuna sin existencias',
+            'activo' => true,
+            'producto_id' => $vaccineProduct->id,
+        ]);
+
+        $response = $this->actingAs($veterinarian)
+            ->from(route('portal.atenciones.create', $appointment))
+            ->post(route('portal.atenciones.store', $appointment), [
+                'fecha_atencion' => now()->format('Y-m-d\TH:i'),
+                'diagnostico' => 'Paciente estable.',
+                'nota' => 'Se revisó al paciente.',
+                'vacunas_aplicadas' => [$vaccine->id],
+            ]);
+
+        $response->assertRedirect(route('portal.atenciones.create', $appointment))
+            ->assertSessionHasErrors('cantidad');
+        $this->assertDatabaseCount('atenciones', 0);
+        $this->assertDatabaseCount('vacunaciones', 0);
+        $this->assertDatabaseCount('movimientos_inventario', 0);
         $this->assertDatabaseHas('citas', [
             'id' => $appointment->id,
             'estado' => 'pendiente',

@@ -22,7 +22,7 @@
             ['icon' => 'pets', 'label' => 'Pacientes registrados', 'value' => '—', 'description' => 'Conecta el total de pacientes'],
             ['icon' => 'event_available', 'label' => 'Citas de hoy', 'value' => '—', 'description' => 'Conecta la agenda diaria'],
             ['icon' => 'vaccines', 'label' => 'Vacunas pendientes', 'value' => '—', 'description' => 'Conecta los seguimientos'],
-            ['icon' => 'inventory_2', 'label' => 'Alertas de inventario', 'value' => '—', 'description' => 'Conecta las existencias'],
+            ['icon' => 'inventory_2', 'label' => 'Alertas de inventario', 'value' => (string) $productosCriticos->count(), 'description' => 'Vacunas con 15% o menos de su capacidad óptima'],
         ] as $metric)
             <article class="flex min-h-40 flex-col justify-between gap-space-md rounded-card border border-outline-variant/50 bg-surface-container-lowest p-space-md shadow-sm">
                 <div class="flex items-start justify-between gap-3">
@@ -39,6 +39,25 @@
             </article>
         @endforeach
     </section>
+
+    @if ($productosCriticos->isNotEmpty())
+        <section role="alert" class="mt-6 rounded-2xl border border-error/30 bg-error-container px-5 py-4 text-on-error-container shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-bold">Alerta crítica de inventario</h2>
+                    <p class="mt-1 text-sm">
+                        {{ $productosCriticos->count() }} {{ $productosCriticos->count() === 1 ? 'vacuna está' : 'vacunas están' }}
+                        al 15% o menos de su capacidad óptima:
+                        {{ $productosCriticos->pluck('nombre')->join(', ') }}.
+                    </p>
+                </div>
+                <a href="{{ route('portal.inventario.index') }}" class="inline-flex min-h-10 items-center gap-2 rounded-lg bg-error px-4 py-2 text-sm font-semibold text-on-error hover:bg-error/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error">
+                    Revisar inventario
+                    <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+                </a>
+            </div>
+        </section>
+    @endif
 
     <section class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
         <article id="citas" class="overflow-hidden rounded-2xl border border-outline-variant/50 bg-surface-container-lowest shadow-sm">
@@ -70,7 +89,7 @@
                 Consultar mascotas
                 <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
             </a>
-            <a id="inventario" href="#inventario" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
+            <a href="{{ route('portal.inventario.index') }}" class="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-surface-container-low px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
                 Ver inventario
                 <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
             </a>
