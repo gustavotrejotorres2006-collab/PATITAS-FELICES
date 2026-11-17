@@ -7216,6 +7216,7 @@
             "time": "2026-07-18T17:53:15+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "laravel/sail",
             "version": "v1.70.0",
             "source": {
@@ -7279,6 +7280,8 @@
             "time": "2026-10-15T08:53:46+00:00"
         },
         {
+=======
+>>>>>>> 670df389b07adbc067aa1931bba65743962138f7
             "name": "mockery/mockery",
             "version": "1.6.15",
             "source": {
