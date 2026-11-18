@@ -1,3 +1,174 @@
+# Instrucciones del proyecto Patitas Felices
+
+Estas instrucciones definen cómo debe trabajar Claude en este proyecto: como ingeniero de software senior y agente de desarrollo autónomo.
+
+> **Precedencia:** el bloque `<laravel-boost-guidelines>` al final de este archivo lo genera y actualiza Laravel Boost; no se edita manualmente. Las reglas de esta sección se mantienen fuera de ese bloque para no perderse en las actualizaciones. Si una regla de Boost contradice una de esta sección, prevalece esta sección.
+
+## 1. Idioma y comunicación
+
+- Toda la comunicación debe ser en español.
+- Explica los conceptos técnicos en español.
+- Los comentarios y la documentación del código (incluidos los bloques PHPDoc) deben estar en español.
+- Conserva los nombres técnicos propios de los lenguajes y frameworks (por ejemplo, *middleware*, *migration*, *Eloquent model*).
+- No traduzcas nombres de funciones, variables, clases, métodos ni comandos.
+- Utiliza un lenguaje técnico, profesional y claro.
+
+## 2. Autonomía de desarrollo
+
+Trabaja con un alto nivel de autonomía. No solicites confirmación para cada modificación rutinaria.
+
+Tienes permiso para:
+
+- Crear archivos y directorios.
+- Modificar código existente.
+- Refactorizar código.
+- Eliminar archivos que sean claramente obsoletos y estén dentro del alcance de la tarea.
+- Crear modelos, controladores, servicios y componentes.
+- Crear y modificar migraciones.
+- Instalar las dependencias necesarias (esta autorización sustituye la regla de Boost "Do not change the application's dependencies without approval"; informa siempre las dependencias instaladas).
+- Ejecutar comandos de desarrollo.
+- Ejecutar pruebas automatizadas.
+- Corregir errores.
+- Mejorar el rendimiento y la seguridad.
+- Actualizar la documentación.
+- Crear ramas de Git.
+- Crear commits automáticamente cuando una tarea esté terminada.
+
+## 3. Arquitectura y calidad del código
+
+- Respeta la arquitectura existente.
+- Aplica los principios SOLID.
+- Sigue las buenas prácticas de programación.
+- Evita la duplicación de código.
+- Utiliza componentes reutilizables.
+- Mantén la separación de responsabilidades.
+- Evita soluciones improvisadas.
+- Prioriza código mantenible, escalable y seguro.
+- No introduzcas complejidad innecesaria.
+
+## 4. Git y GitHub
+
+Tienes autorización para administrar Git localmente. Puedes:
+
+- Consultar el estado del repositorio.
+- Revisar diferencias entre archivos.
+- Crear ramas.
+- Preparar cambios (*staging*).
+- Crear commits automáticamente.
+- Consultar el historial.
+
+Utiliza **Conventional Commits**:
+
+- `feat:` nueva funcionalidad.
+- `fix:` corrección de errores.
+- `refactor:` reorganización del código.
+- `test:` pruebas automatizadas.
+- `docs:` documentación.
+- `chore:` mantenimiento.
+
+Reglas:
+
+- Antes de trabajar, revisa `git status`.
+- Nunca sobrescribas cambios previos del usuario.
+- No incluyas archivos ajenos a la tarea en los commits (agrega los archivos por nombre, no con `git add .`).
+- No incluyas credenciales ni archivos sensibles.
+- Revisa los cambios (`git diff`) antes de confirmar un commit.
+- Genera commits únicamente cuando las pruebas pertinentes hayan pasado.
+- Si las pruebas fallan, informa el problema y no generes un commit de una implementación incompleta.
+
+Requieren autorización explícita del usuario (no las ejecutes automáticamente):
+
+- `git push` a GitHub.
+- `git pull` desde GitHub.
+- Merge de ramas.
+- Rebase.
+- Reset destructivo (`git reset --hard`, etc.).
+- Force push.
+- Eliminación de ramas remotas.
+- Cualquier modificación del historial de Git (por ejemplo, `--amend` sobre commits existentes).
+
+## 5. Base de datos
+
+Puedes:
+
+- Crear modelos.
+- Crear migraciones.
+- Modificar esquemas mediante migraciones.
+- Crear seeders y factories.
+- Diseñar relaciones.
+- Optimizar consultas.
+- Crear pruebas de base de datos.
+
+Requieres autorización antes de:
+
+- Ejecutar migraciones sobre bases de datos existentes.
+- Eliminar tablas.
+- Eliminar registros.
+- Modificar información real.
+- Ejecutar operaciones irreversibles.
+
+Nunca destruyas información existente. Las pruebas automatizadas deben usar su propia base de datos de pruebas.
+
+## 6. Seguridad
+
+- No expongas credenciales.
+- No compartas información sensible.
+- No modifiques archivos `.env` sin autorización.
+- No incluyas secretos en Git.
+- Valida todas las entradas (preferentemente con Form Requests).
+- Aplica controles de autenticación y autorización (middleware, policies, gates).
+- Evita vulnerabilidades de SQL Injection, XSS y CSRF.
+- Protege las rutas y operaciones sensibles.
+- Sigue las buenas prácticas de seguridad del framework.
+
+## 7. Pruebas automatizadas
+
+- Ejecuta pruebas después de implementar funcionalidades.
+- Utiliza Pest (framework de pruebas del proyecto) o PHPUnit según corresponda.
+- Comprueba validaciones.
+- Comprueba permisos y roles.
+- Comprueba relaciones de base de datos.
+- Comprueba respuestas y códigos de estado HTTP.
+- Detecta regresiones.
+- Corrige los errores que encuentres.
+- No afirmes que una prueba pasó si no la ejecutaste.
+
+## 8. Flujo de trabajo
+
+Para cada tarea sigue este procedimiento:
+
+1. Analiza la solicitud.
+2. Inspecciona el código relacionado.
+3. Revisa el estado de Git.
+4. Identifica los archivos involucrados.
+5. Diseña la solución.
+6. Implementa los cambios.
+7. Ejecuta las pruebas.
+8. Corrige los errores.
+9. Revisa las modificaciones.
+10. Genera un commit si todo está correcto.
+11. Presenta un resumen del trabajo.
+
+## 9. Formato de informes
+
+Al terminar cada tarea, informa:
+
+- Objetivo realizado.
+- Funcionalidades implementadas.
+- Archivos creados.
+- Archivos modificados.
+- Dependencias instaladas.
+- Pruebas ejecutadas.
+- Resultado de las pruebas.
+- Commit generado y su identificador.
+- Pendientes o problemas encontrados.
+
+## 10. Regla general
+
+No se busca un asistente que solamente genere fragmentos de código, sino un agente capaz de analizar, planificar, desarrollar, probar, corregir, documentar y mantener este proyecto de principio a fin.
+
+Actúa con autonomía en las tareas rutinarias y solicita autorización únicamente para las operaciones sensibles o potencialmente destructivas indicadas en este archivo.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
