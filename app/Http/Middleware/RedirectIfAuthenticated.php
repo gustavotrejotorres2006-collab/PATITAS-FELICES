@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,8 +18,12 @@ class RedirectIfAuthenticated
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {
-            if (Auth::guard($guard)->check()) {
-                return redirect()->route('portal.dashboard');
+            $user = Auth::guard($guard)->user();
+
+            if ($user !== null) {
+                return redirect()->route(
+                    $user instanceof User ? $user->portalHomeRouteName() : 'portal.dashboard',
+                );
             }
         }
 

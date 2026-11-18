@@ -31,12 +31,10 @@ class AuthenticatedSessionController extends Controller
         $user = $this->authService->login($credentials);
         $request->session()->regenerate();
 
-        if (strtolower($user->role?->nombre ?? '') === 'recepcionista') {
-            return redirect()->route('portal.citas.index');
-        }
+        $homeRouteName = $user->portalHomeRouteName();
 
-        if (strtolower($user->role?->nombre ?? '') === 'veterinario') {
-            return redirect()->route('portal.atenciones.index');
+        if ($homeRouteName !== 'portal.dashboard') {
+            return redirect()->route($homeRouteName);
         }
 
         return redirect()->intended(route('portal.dashboard'));

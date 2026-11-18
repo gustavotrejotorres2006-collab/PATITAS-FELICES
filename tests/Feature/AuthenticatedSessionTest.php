@@ -178,6 +178,52 @@ class AuthenticatedSessionTest extends TestCase
     /**
      * @param  array<string, mixed>  $attributes
      */
+    public function test_authenticated_administrator_visiting_login_is_redirected_to_the_dashboard(): void
+    {
+        $administrator = $this->createAdministrator();
+
+        $this->actingAs($administrator)
+            ->get(route('login'))
+            ->assertRedirect(route('portal.dashboard'));
+
+        $this->get(route('portal.dashboard'))->assertOk();
+    }
+
+    public function test_authenticated_receptionist_visiting_login_is_redirected_to_the_appointment_agenda(): void
+    {
+        $role = Role::query()->create(['nombre' => 'Recepcionista']);
+        $receptionist = User::factory()->create([
+            'role_id' => $role->id,
+            'estado' => 'activo',
+        ]);
+
+        $this->actingAs($receptionist)
+            ->get(route('login'))
+            ->assertRedirect(route('portal.citas.index'));
+
+        $this->get(route('portal.citas.index'))->assertOk();
+    }
+
+    public function test_authenticated_veterinarian_visiting_login_is_redirected_to_the_clinical_agenda(): void
+    {
+        $role = Role::query()->create(['nombre' => 'Veterinario']);
+        $veterinarian = User::factory()->create([
+            'role_id' => $role->id,
+            'estado' => 'activo',
+        ]);
+        Profesional::query()->create([
+            'user_id' => $veterinarian->id,
+            'nombre' => $veterinarian->name,
+            'estado' => 'activo',
+        ]);
+
+        $this->actingAs($veterinarian)
+            ->get(route('login'))
+            ->assertRedirect(route('portal.atenciones.index'));
+
+        $this->get(route('portal.atenciones.index'))->assertOk();
+    }
+
     private function createAdministrator(array $attributes = []): User
     {
         $role = Role::query()->create(['nombre' => 'Administrador']);
