@@ -35,6 +35,18 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Nombre de la ruta de inicio del portal a la que el rol del usuario tiene acceso.
+     */
+    public function portalHomeRouteName(): string
+    {
+        return match (strtolower($this->role?->nombre ?? '')) {
+            'recepcionista' => 'portal.citas.index',
+            'veterinario' => 'portal.atenciones.index',
+            default => 'portal.dashboard',
+        };
+    }
+
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class, 'role_id');

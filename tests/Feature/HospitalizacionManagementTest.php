@@ -133,6 +133,127 @@ class HospitalizacionManagementTest extends TestCase
         $this->assertDatabaseCount('cirugias', 1);
     }
 
+    public function test_consecutive_surgeries_are_allowed_once_the_separation_margin_has_elapsed(): void
+    {
+        $this->freezeTime();
+        [$veterinarian, $professional, $owner, $attention] = $this->createClinicalCase();
+        $room = $this->createSpace('Quirófano 1', 'quirofano');
+        $anesthesiologist = $this->createProfessional('anesthesiologist@example.test');
+        $day = now()->addDays(2);
+
+        // Cirugía base: 09:00 a 11:00 (120 minutos).
+        $this->actingAs($veterinarian)
+            ->post(route('portal.cirugias.store'), $this->surgeryData($attention, $room, $professional, $anesthesiologist, $owner))
+            ->assertSessionHasNoErrors();
+
+        // Inicia justo 90 minutos después de terminar la anterior.
+        $this->post(route('portal.cirugias.store'), $this->surgeryData(
+            $attention,
+            $room,
+            $professional,
+            $anesthesiologist,
+            $owner,
+            ['programada_at' => $day->copy()->setTime(12, 30)->format('Y-m-d\TH:i')],
+        ))->assertSessionHasNoErrors();
+
+        // Termina justo 90 minutos antes de que inicie la cirugía base.
+        $this->post(route('portal.cirugias.store'), $this->surgeryData(
+            $attention,
+            $room,
+            $professional,
+            $anesthesiologist,
+            $owner,
+            ['programada_at' => $day->copy()->setTime(5, 30)->format('Y-m-d\TH:i')],
+        ))->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('cirugias', 3);
+    }
+
+    public function test_surgery_starting_inside_the_separation_margin_of_another_surgery_is_rejected(): void
+    {
+        $this->freezeTime();
+        [$veterinarian, $professional, $owner, $attention] = $this->createClinicalCase();
+        $room = $this->createSpace('Quirófano 1', 'quirofano');
+        $anesthesiologist = $this->createProfessional('anesthesiologist@example.test');
+
+        $this->actingAs($veterinarian)
+            ->post(route('portal.cirugias.store'), $this->surgeryData($attention, $room, $professional, $anesthesiologist, $owner))
+            ->assertSessionHasNoErrors();
+
+        // La cirugía base termina a las 11:00; a las 12:29 aún no transcurren los 90 minutos.
+        $this->from(route('portal.hospitalizaciones.index'))
+            ->post(route('portal.cirugias.store'), $this->surgeryData(
+                $attention,
+                $room,
+                $professional,
+                $anesthesiologist,
+                $owner,
+                ['programada_at' => now()->addDays(2)->setTime(12, 29)->format('Y-m-d\TH:i')],
+            ))
+            ->assertRedirect(route('portal.hospitalizaciones.index'))
+            ->assertSessionHasErrors('programada_at');
+
+        $this->assertDatabaseCount('cirugias', 1);
+    }
+
+    public function test_surgeries_separated_by_several_hours_on_the_same_day_do_not_conflict(): void
+    {
+        $this->freezeTime();
+        [$veterinarian, $professional, $owner, $attention] = $this->createClinicalCase();
+        $room = $this->createSpace('Quirófano 1', 'quirofano');
+        $anesthesiologist = $this->createProfessional('anesthesiologist@example.test');
+        $day = now()->addDays(2);
+
+        $this->actingAs($veterinarian)
+            ->post(route('portal.cirugias.store'), $this->surgeryData(
+                $attention,
+                $room,
+                $professional,
+                $anesthesiologist,
+                $owner,
+                ['programada_at' => $day->copy()->setTime(8, 0)->format('Y-m-d\TH:i'), 'duracion_minutos' => 60],
+            ))
+            ->assertSessionHasNoErrors();
+
+        $this->post(route('portal.cirugias.store'), $this->surgeryData(
+            $attention,
+            $room,
+            $professional,
+            $anesthesiologist,
+            $owner,
+            ['programada_at' => $day->copy()->setTime(20, 0)->format('Y-m-d\TH:i'), 'duracion_minutos' => 60],
+        ))->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('cirugias', 2);
+    }
+
+    public function test_surgery_can_be_scheduled_after_an_appointment_that_ended_outside_the_separation_margin(): void
+    {
+        $this->freezeTime();
+        [$veterinarian, $professional, $owner, $attention] = $this->createClinicalCase();
+        $room = $this->createSpace('Quirófano 1', 'quirofano');
+        $anesthesiologist = $this->createProfessional('anesthesiologist@example.test');
+        $day = now()->addDays(2);
+        $attention->cita()->update([
+            'inicio' => $day->copy()->setTime(7, 0),
+            'fin' => $day->copy()->setTime(7, 30),
+            'estado' => 'confirmada',
+        ]);
+
+        $this->actingAs($veterinarian)
+            ->post(route('portal.cirugias.store'), $this->surgeryData(
+                $attention,
+                $room,
+                $professional,
+                $anesthesiologist,
+                $owner,
+                ['programada_at' => $day->copy()->setTime(18, 0)->format('Y-m-d\TH:i')],
+            ))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('cirugias', 1);
+    }
+
     public function test_surgery_cannot_be_scheduled_over_an_existing_appointment(): void
     {
         [$veterinarian, $professional, $owner, $attention] = $this->createClinicalCase();

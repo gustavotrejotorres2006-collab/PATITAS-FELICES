@@ -20,6 +20,18 @@ use Illuminate\Validation\ValidationException;
 
 class HospitalizacionService
 {
+    /**
+     * Minutos de separación obligatoria antes y después de cada cirugía
+     * (preparación, recuperación y desinfección).
+     */
+    private const SEPARACION_QUIRURGICA_MINUTOS = 90;
+
+    /**
+     * Duración máxima permitida para una cirugía; coincide con la validación
+     * `duracion_minutos` del controlador y delimita la ventana de búsqueda.
+     */
+    private const DURACION_MAXIMA_CIRUGIA_MINUTOS = 720;
+
     public function __construct(private InventarioService $inventarioService) {}
 
     /**
@@ -99,12 +111,17 @@ class HospitalizacionService
             $start = CarbonImmutable::parse($data['programada_at']);
             $duration = (int) $data['duracion_minutos'];
             $end = $start->addMinutes($duration);
-            $windowStart = $start->subMinutes(810);
-            $windowEnd = $end->addMinutes(90);
+            // Intervalo bloqueado por la nueva cirugía, incluido el margen de separación.
+            $blockedStart = $start->subMinutes(self::SEPARACION_QUIRURGICA_MINUTOS);
+            $blockedEnd = $end->addMinutes(self::SEPARACION_QUIRURGICA_MINUTOS);
+
+            // La ventana de búsqueda solo preselecciona candidatas: una cirugía existente
+            // puede iniciar hasta la duración máxima antes del intervalo bloqueado y aún traslaparse.
+            $searchStart = $blockedStart->subMinutes(self::DURACION_MAXIMA_CIRUGIA_MINUTOS);
 
             $surgeries = Cirugia::query()
                 ->where('estado', 'programada')
-                ->whereBetween('programada_at', [$windowStart, $windowEnd])
+                ->whereBetween('programada_at', [$searchStart, $blockedEnd])
                 ->where(function (Builder $query) use ($space, $professionalIds): void {
                     $query->where('espacio_id', $space->id)
                         ->orWhereIn('cirujano_id', $professionalIds)
@@ -116,7 +133,7 @@ class HospitalizacionService
                 $existingStart = CarbonImmutable::instance($existingSurgery->programada_at);
                 $existingEnd = $existingStart->addMinutes($existingSurgery->duracion_minutos);
 
-                if ($existingStart->lt($windowEnd) && $existingEnd->gt($windowStart)) {
+                if ($existingStart->lt($blockedEnd) && $existingEnd->gt($blockedStart)) {
                     throw ValidationException::withMessages([
                         'programada_at' => 'El quirófano, el cirujano o el anestesiólogo ya tienen un procedimiento en ese horario.',
                     ]);
@@ -125,8 +142,8 @@ class HospitalizacionService
 
             $appointmentConflict = Cita::query()
                 ->where('estado', '!=', 'cancelada')
-                ->where('inicio', '<', $windowEnd)
-                ->where('fin', '>', $windowStart)
+                ->where('inicio', '<', $blockedEnd)
+                ->where('fin', '>', $blockedStart)
                 ->where(function (Builder $query) use ($professionalIds): void {
                     $query->whereIn('profesional_id', $professionalIds)
                         ->orWhereHas('profesionales', fn (Builder $participants) => $participants
